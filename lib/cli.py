@@ -1,11 +1,4 @@
-# lib/cli.py
-
-# Change this:
-# from lib.models import Session, Platform, Genre, Developer, Publisher, Game, create_tables
-# To this:
-import lib.models # Import the whole module
-
-# And keep these imports as they are (or adjust if they also face issues, but start with models)
+import lib.models
 from lib.db.seed import seed_database
 from lib.helpers import (
     exit_program, get_string_input, get_int_input,
@@ -13,13 +6,7 @@ from lib.helpers import (
     display_games, select_model_instance
 )
 
-# IMPORTANT: You will also need to update how Platform, Genre, etc. are referenced
-# in the functions like main_menu, games_menu, add_new_game, etc.
-# For example, `Platform` will become `lib.models.Platform`.
-# Let's apply this change systematically.
-
 def main_menu(session):
-    """Displays the main menu and handles user choices."""
     while True:
         print("\n--- GameShelf Main Menu ---")
         print("1. Manage Games")
@@ -34,18 +21,18 @@ def main_menu(session):
         if choice == "1":
             games_menu(session)
         elif choice == "2":
-            manage_simple_model_menu(session, lib.models.Platform, "Platform", display_platforms) # Changed
+            manage_simple_model_menu(session, lib.models.Platform, "Platform", display_platforms)
         elif choice == "3":
-            manage_simple_model_menu(session, lib.models.Genre, "Genre", display_genres) # Changed
+            manage_simple_model_menu(session, lib.models.Genre, "Genre", display_genres)
         elif choice == "4":
-            manage_simple_model_menu(session, lib.models.Developer, "Developer", display_developers) # Changed
+            manage_simple_model_menu(session, lib.models.Developer, "Developer", display_developers)
         elif choice == "5":
-            manage_simple_model_menu(session, lib.models.Publisher, "Publisher", display_publishers) # Changed
+            manage_simple_model_menu(session, lib.models.Publisher, "Publisher", display_publishers)
         elif choice == "6":
             confirm_seed = input("This will clear ALL data and re-seed. Are you sure? (yes/no): ").lower()
             if confirm_seed == 'yes':
                 print("Seeding database...")
-                seed_database() 
+                seed_database()
                 print("Database seeded.")
             else:
                 print("Seeding cancelled.")
@@ -55,7 +42,6 @@ def main_menu(session):
             print("Invalid choice. Please try again.")
 
 def games_menu(session):
-    """Menu for managing games."""
     while True:
         print("\n--- Manage Games ---")
         print("1. List All Games")
@@ -85,26 +71,25 @@ def games_menu(session):
             print("Invalid choice.")
 
 def add_new_game(session):
-    """Handles adding a new game."""
     print("\n--- Add New Game ---")
     title = get_string_input("Enter game title: ", max_len=150)
     
-    platform = select_or_create_related_model(session, lib.models.Platform, "Platform") # Changed
+    platform = select_or_create_related_model(session, lib.models.Platform, "Platform")
     if not platform: return
 
-    genre = select_or_create_related_model(session, lib.models.Genre, "Genre") # Changed
+    genre = select_or_create_related_model(session, lib.models.Genre, "Genre")
     if not genre: return
 
     release_year = get_int_input("Enter release year (e.g., 2023) (optional, press Enter to skip): ", 1950, 2077, allow_empty=True)
     rating = get_int_input("Enter rating (1-5) (optional, press Enter to skip): ", 1, 5, allow_empty=True)
 
-    developer = select_or_create_related_model(session, lib.models.Developer, "Developer", optional=True) # Changed
+    developer = select_or_create_related_model(session, lib.models.Developer, "Developer", optional=True)
     if developer == "failed_create": return
 
-    publisher = select_or_create_related_model(session, lib.models.Publisher, "Publisher", optional=True) # Changed
+    publisher = select_or_create_related_model(session, lib.models.Publisher, "Publisher", optional=True)
     if publisher == "failed_create": return
 
-    game = lib.models.Game.create(session, title, platform, genre, release_year, rating, developer, publisher) # Changed
+    game = lib.models.Game.create(session, title, platform, genre, release_year, rating, developer, publisher)
     if game:
         print(f"Success! Game '{game.title}' added with ID: {game.id}.")
     else:
@@ -112,8 +97,6 @@ def add_new_game(session):
 
 
 def select_or_create_related_model(session, model_class, model_name, optional=False):
-    """Helper to select an existing related model or create a new one."""
-    # model_class is already passed as lib.models.ModelName, so no change needed inside this function
     while True:
         prompt_msg = f"Select {model_name}"
         if optional:
@@ -121,13 +104,13 @@ def select_or_create_related_model(session, model_class, model_name, optional=Fa
         else:
             prompt_msg += " (ID or 'new')"
 
-        selected = select_model_instance(session, model_class, prompt_msg) # select_model_instance needs to handle model_class correctly
+        selected = select_model_instance(session, model_class, prompt_msg)
 
         if selected == "skip" and optional:
             return None
         if selected == "new":
             new_name = get_string_input(f"Enter new {model_name} name: ")
-            instance = model_class.create(session, name=new_name) # Uses model_class directly
+            instance = model_class.create(session, name=new_name)
             if instance:
                 print(f"{model_name} '{instance.name}' created with ID {instance.id}.")
                 return instance
@@ -138,7 +121,7 @@ def select_or_create_related_model(session, model_class, model_name, optional=Fa
         elif selected:
             return selected
         elif not selected and not optional:
-                 print(f"A {model_name} is required. Please select or create one.")
+                print(f"A {model_name} is required. Please select or create one.")
         elif not selected and optional:
                 return None
 
@@ -146,7 +129,7 @@ def select_or_create_related_model(session, model_class, model_name, optional=Fa
 def find_game_by_id_action(session):
     game_id = get_int_input("Enter Game ID to find: ")
     if game_id is not None:
-        game = lib.models.Game.find_by_id(session, game_id) # Changed
+        game = lib.models.Game.find_by_id(session, game_id)
         if game:
             display_games(session, [game])
         else:
@@ -154,7 +137,7 @@ def find_game_by_id_action(session):
 
 def find_games_by_title_action(session):
     search_term = get_string_input("Enter title (or part of title) to search for: ")
-    games = lib.models.Game.find_by_title(session, search_term) # Changed
+    games = lib.models.Game.find_by_title(session, search_term)
     if games:
         display_games(session, games)
     else:
@@ -162,7 +145,7 @@ def find_games_by_title_action(session):
             
 def update_game_action(session):
     game_id = get_int_input("Enter ID of the game to update: ")
-    game = lib.models.Game.find_by_id(session, game_id) # Changed
+    game = lib.models.Game.find_by_id(session, game_id)
     if not game:
         print(f"Game with ID {game_id} not found.")
         return
@@ -173,18 +156,18 @@ def update_game_action(session):
     new_title = input(f"New title (current: {game.title}): ").strip() or None
     
     print(f"\nCurrent Platform: {game.platform.name if game.platform else 'N/A'}")
-    new_platform = select_or_create_related_model(session, lib.models.Platform, "Platform", optional=True) # Changed
+    new_platform = select_or_create_related_model(session, lib.models.Platform, "Platform", optional=True)
     if new_platform == "failed_create": new_platform = game.platform
     elif new_platform == "skip": new_platform = game.platform
     
     print(f"\nCurrent Genre: {game.genre.name if game.genre else 'N/A'}")
-    new_genre = select_or_create_related_model(session, lib.models.Genre, "Genre", optional=True) # Changed
+    new_genre = select_or_create_related_model(session, lib.models.Genre, "Genre", optional=True)
     if new_genre == "failed_create": new_genre = game.genre
     elif new_genre == "skip": new_genre = game.genre
 
     new_year_str = input(f"New release year (current: {game.release_year or 'N/A'}): ").strip()
-    new_year = game.release_year # Default to current
-    if new_year_str == "": pass # Keep current if blank
+    new_year = game.release_year
+    if new_year_str == "": pass
     elif new_year_str.lower() == 'none' or new_year_str == '0': new_year = None
     else:
         try: new_year = int(new_year_str)
@@ -192,7 +175,7 @@ def update_game_action(session):
 
 
     new_rating_str = input(f"New rating (1-5) (current: {game.rating or 'N/A'}): ").strip()
-    new_rating = game.rating # Default to current
+    new_rating = game.rating
     if new_rating_str == "": pass
     elif new_rating_str.lower() == 'none' or new_rating_str == '0': new_rating = None
     else:
@@ -204,29 +187,28 @@ def update_game_action(session):
 
 
     print(f"\nCurrent Developer: {game.developer.name if game.developer else 'N/A'}")
-    new_developer = select_or_create_related_model(session, lib.models.Developer, "Developer", optional=True) # Changed
+    new_developer = select_or_create_related_model(session, lib.models.Developer, "Developer", optional=True)
     if new_developer == "failed_create": new_developer = game.developer
     elif new_developer == "skip": new_developer = game.developer
 
 
     print(f"\nCurrent Publisher: {game.publisher.name if game.publisher else 'N/A'}")
-    new_publisher = select_or_create_related_model(session, lib.models.Publisher, "Publisher", optional=True) # Changed
+    new_publisher = select_or_create_related_model(session, lib.models.Publisher, "Publisher", optional=True)
     if new_publisher == "failed_create": new_publisher = game.publisher
     elif new_publisher == "skip": new_publisher = game.publisher
     
     update_args = {}
     if new_title is not None and new_title != game.title : update_args['title'] = new_title
-    # Ensure new_platform, new_genre etc. are the actual objects or None
-    if not isinstance(new_platform, str): # Avoid passing "failed_create" or "skip"
+    if not isinstance(new_platform, str):
         if new_platform != game.platform : update_args['platform'] = new_platform
     if not isinstance(new_genre, str):
         if new_genre != game.genre : update_args['genre'] = new_genre
     if new_year != game.release_year : update_args['release_year'] = new_year
     if new_rating != game.rating : update_args['rating'] = new_rating
     if not isinstance(new_developer, str):
-      if new_developer != game.developer : update_args['developer'] = new_developer
+        if new_developer != game.developer : update_args['developer'] = new_developer
     if not isinstance(new_publisher, str):
-      if new_publisher != game.publisher : update_args['publisher'] = new_publisher
+        if new_publisher != game.publisher : update_args['publisher'] = new_publisher
 
 
     if not update_args:
@@ -241,7 +223,7 @@ def update_game_action(session):
 
 def delete_game_action(session):
     game_id = get_int_input("Enter ID of the game to delete: ")
-    game = lib.models.Game.find_by_id(session, game_id) # Changed
+    game = lib.models.Game.find_by_id(session, game_id)
     if not game:
         print(f"Game with ID {game_id} not found.")
         return
@@ -257,7 +239,6 @@ def delete_game_action(session):
 
 
 def manage_simple_model_menu(session, model_class, model_name, display_func):
-    # model_class is already lib.models.ModelName
     while True:
         print(f"\n--- Manage {model_name}s ---")
         print(f"1. List All {model_name}s")
@@ -269,10 +250,10 @@ def manage_simple_model_menu(session, model_class, model_name, display_func):
         choice = input("> ")
 
         if choice == "1":
-            display_func(session) # display_func needs to use lib.models if it queries directly
+            display_func(session)
         elif choice == "2":
             name = get_string_input(f"Enter new {model_name} name: ")
-            instance = model_class.create(session, name=name) # Uses model_class.create
+            instance = model_class.create(session, name=name)
             if instance:
                 print(f"{model_name} '{instance.name}' added with ID: {instance.id}.")
             else:
@@ -280,9 +261,8 @@ def manage_simple_model_menu(session, model_class, model_name, display_func):
         elif choice == "3":
             item_id = get_int_input(f"Enter {model_name} ID to find: ")
             if item_id is not None:
-                instance = model_class.find_by_id(session, item_id) # Uses model_class.find_by_id
+                instance = model_class.find_by_id(session, item_id)
                 if instance:
-                    # Assuming instance.games exists for these simple models
                     game_count = 0
                     if hasattr(instance, 'games') and instance.games is not None:
                         game_count = len(instance.games)
@@ -291,7 +271,7 @@ def manage_simple_model_menu(session, model_class, model_name, display_func):
                     print(f"No {model_name} found with ID {item_id}.")
         elif choice == "5": 
             item_id = get_int_input(f"Enter ID of the {model_name} to update: ")
-            instance = model_class.find_by_id(session, item_id) # Uses model_class.find_by_id
+            instance = model_class.find_by_id(session, item_id)
             if instance:
                 new_name = get_string_input(f"Enter new name for '{instance.name}': ")
                 if instance.update(session, name=new_name):
@@ -302,7 +282,7 @@ def manage_simple_model_menu(session, model_class, model_name, display_func):
                 print(f"{model_name} with ID {item_id} not found.")
         elif choice == "6": 
             item_id = get_int_input(f"Enter ID of the {model_name} to delete: ")
-            instance = model_class.find_by_id(session, item_id) # Uses model_class.find_by_id
+            instance = model_class.find_by_id(session, item_id)
             if instance:
                 confirm = input(f"Are you sure you want to delete '{instance.name}' (ID: {instance.id})? This cannot be undone. (yes/no): ").lower()
                 if confirm == 'yes':
@@ -322,12 +302,10 @@ def manage_simple_model_menu(session, model_class, model_name, display_func):
 if __name__ == "__main__":
     print("Initializing GameShelf...")
     try:
-        # Now call create_tables as an attribute of the imported lib.models module
         print("DEBUG: About to call lib.models.create_tables()")
         lib.models.create_tables() 
         print("DEBUG: lib.models.create_tables() called.")
         
-        # And Session as an attribute
         db_session = lib.models.Session() 
         print("Welcome to GameShelf!")
         main_menu(db_session)
@@ -338,6 +316,6 @@ if __name__ == "__main__":
         print(f"An error occurred during application startup: {e}")
         print("Please ensure your database is configured correctly.")
     finally:
-        if 'db_session' in locals() and db_session: # type: ignore
-            db_session.close() # type: ignore
+        if 'db_session' in locals() and db_session:
+            db_session.close()
             print("Database session closed.")
