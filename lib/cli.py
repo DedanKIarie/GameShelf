@@ -14,7 +14,6 @@ def main_menu(session):
         print("3. Manage Genres")
         print("4. Manage Developers")
         print("5. Manage Publishers")
-        print("6. Seed Database (Warning: Clears existing data)")
         print("0. Exit Program")
         choice = input("> ")
 
@@ -28,14 +27,6 @@ def main_menu(session):
             manage_simple_model_menu(session, lib.models.Developer, "Developer", display_developers)
         elif choice == "5":
             manage_simple_model_menu(session, lib.models.Publisher, "Publisher", display_publishers)
-        elif choice == "6":
-            confirm_seed = input("This will clear ALL data and re-seed. Are you sure? (yes/no): ").lower()
-            if confirm_seed == 'yes':
-                print("Seeding database...")
-                seed_database()
-                print("Database seeded.")
-            else:
-                print("Seeding cancelled.")
         elif choice == "0":
             exit_program()
         else:
