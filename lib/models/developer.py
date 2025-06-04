@@ -1,19 +1,18 @@
-# lib/models/developer.py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from .base import Base, Session # Import Base and Session from base.py
+from .base import Base, Session 
 
 class Developer(Base):
     __tablename__ = 'developers'
 
     id = Column(Integer, primary_key=True)
-    _name = Column("name", String, unique=True, nullable=False) # Backing field for property
+    _name = Column("name", String, unique=True, nullable=False) 
 
-    # Relationship: One Developer can develop many Games
+ 
     games = relationship("Game", back_populates="developer")
 
     def __init__(self, name):
-        self.name = name # Uses the setter
+        self.name = name 
 
     @property
     def name(self):
@@ -25,11 +24,11 @@ class Developer(Base):
         """Setter for the developer name with validation."""
         if not isinstance(value, str):
             raise TypeError("Developer name must be a string.")
-        if not 2 <= len(value) <= 100: # Developers can have longer names
+        if not 2 <= len(value) <= 100: 
             raise ValueError("Developer name must be between 2 and 100 characters.")
         self._name = value
 
-    # ORM Methods
+
     @classmethod
     def create(cls, session, name):
         """Creates a new developer instance and adds it to the session."""
@@ -42,11 +41,6 @@ class Developer(Base):
             session.rollback()
             print(f"Error creating developer: {e}")
             return None
-        except Exception as e: # Catch other potential SQLAlchemy errors (like unique constraint)
-            session.rollback()
-            print(f"An unexpected error occurred during developer creation: {e}")
-            return None
-
     @classmethod
     def get_all(cls, session):
         """Returns a list of all developers."""
@@ -66,16 +60,12 @@ class Developer(Base):
         """Updates the developer's attributes."""
         if name is not None:
             try:
-                self.name = name # Uses the setter for validation
+                self.name = name 
                 session.commit()
                 return True
             except (TypeError, ValueError) as e:
                 session.rollback()
                 print(f"Error updating developer: {e}")
-                return False
-            except Exception as e:
-                session.rollback()
-                print(f"An unexpected error occurred: {e}")
                 return False
         return False
 
